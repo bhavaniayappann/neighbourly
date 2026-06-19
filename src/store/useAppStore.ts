@@ -10,9 +10,9 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  selectedGeoid: "06075061500",
+  selectedGeoid: "06075020800",
   selectedName: "Mission District",
-  activeLayer: "overview",
+  activeLayer: "income",
   setSelectedNeighbourhood: (geoid, name) =>
     set({ selectedGeoid: geoid, selectedName: name }),
   setActiveLayer: (layer) => set({ activeLayer: layer }),

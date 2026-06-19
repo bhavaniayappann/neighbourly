@@ -1,8 +1,8 @@
 import type { NeighbourhoodData, SocialPulseData } from "@/types";
 
 export const MOCK_NEIGHBOURHOODS: Record<string, NeighbourhoodData> = {
-  "06075061500": {
-    geoid: "06075061500",
+  "06075020800": {
+    geoid: "06075020800",
     name: "Mission District",
     demographics: {
       population: 58234,
@@ -38,8 +38,8 @@ export const MOCK_NEIGHBOURHOODS: Record<string, NeighbourhoodData> = {
       bikeScore: 85,
     },
   },
-  "06075010100": {
-    geoid: "06075010100",
+  "06075010102": {
+    geoid: "06075010102",
     name: "Castro",
     demographics: {
       population: 12450,
@@ -75,8 +75,8 @@ export const MOCK_NEIGHBOURHOODS: Record<string, NeighbourhoodData> = {
       bikeScore: 88,
     },
   },
-  "06075012800": {
-    geoid: "06075012800",
+  "06075022802": {
+    geoid: "06075022802",
     name: "Noe Valley",
     demographics: {
       population: 22100,
@@ -149,8 +149,8 @@ export const MOCK_NEIGHBOURHOODS: Record<string, NeighbourhoodData> = {
       bikeScore: 90,
     },
   },
-  "06075030200": {
-    geoid: "06075030200",
+  "06075002601": {
+    geoid: "06075002601",
     name: "SOMA",
     demographics: {
       population: 34500,
@@ -223,10 +223,84 @@ export const MOCK_NEIGHBOURHOODS: Record<string, NeighbourhoodData> = {
       bikeScore: 75,
     },
   },
+  "06075011901": {
+    geoid: "06075011901",
+    name: "Pacific Heights",
+    demographics: {
+      population: 21400,
+      medianAge: 40.1,
+      medianIncome: 245000,
+      bachelorsPlus: 78,
+      householdSize: 2.0,
+    },
+    schools: {
+      avgRating: 9.5,
+      elementaryCount: 3,
+      middleCount: 1,
+      highCount: 1,
+      topSchool: "Sherman Elementary",
+    },
+    housing: {
+      medianRent: 4500,
+      medianHomeValue: 2200000,
+      vacancyRate: 2.5,
+      ownerOccupied: 52,
+      renterOccupied: 48,
+    },
+    commute: {
+      avgCommuteMins: 26,
+      transitPct: 28,
+      walkPct: 15,
+      drivePct: 45,
+      workFromHomePct: 12,
+    },
+    walkability: {
+      walkScore: 92,
+      transitScore: 85,
+      bikeScore: 70,
+    },
+  },
+  "06075015301": {
+    geoid: "06075015301",
+    name: "Richmond",
+    demographics: {
+      population: 67200,
+      medianAge: 37.2,
+      medianIncome: 118300,
+      bachelorsPlus: 54,
+      householdSize: 2.3,
+    },
+    schools: {
+      avgRating: 8.0,
+      elementaryCount: 6,
+      middleCount: 2,
+      highCount: 2,
+      topSchool: "George Washington High School",
+    },
+    housing: {
+      medianRent: 2800,
+      medianHomeValue: 1350000,
+      vacancyRate: 3.9,
+      ownerOccupied: 42,
+      renterOccupied: 58,
+    },
+    commute: {
+      avgCommuteMins: 30,
+      transitPct: 38,
+      walkPct: 14,
+      drivePct: 35,
+      workFromHomePct: 13,
+    },
+    walkability: {
+      walkScore: 88,
+      transitScore: 72,
+      bikeScore: 78,
+    },
+  },
 };
 
 export const MOCK_SOCIAL: Record<string, SocialPulseData> = {
-  "06075061500": {
+  "06075020800": {
     positive: 50,
     neutral: 25,
     negative: 25,
@@ -263,7 +337,7 @@ export const MOCK_SOCIAL: Record<string, SocialPulseData> = {
 };
 
 export function getNeighbourhoodData(geoid: string): NeighbourhoodData {
-  return MOCK_NEIGHBOURHOODS[geoid] ?? MOCK_NEIGHBOURHOODS["06075061500"];
+  return MOCK_NEIGHBOURHOODS[geoid] ?? MOCK_NEIGHBOURHOODS["06075020800"];
 }
 
 export function getSocialData(geoid: string): SocialPulseData {

@@ -4,7 +4,19 @@ export interface NeighbourhoodProperties {
   geoid: string;
   name: string;
   score: number;
+  fillColor?: string;
 }
+
+export interface CensusTractData {
+  geoid: string;
+  name: string;
+  population: number;
+  medianIncome: number;
+  medianRent: number;
+  bachelorsPlus: number;
+}
+
+export type TractCensusMap = Record<string, CensusTractData>;
 
 export interface DemographicsData {
   population: number;

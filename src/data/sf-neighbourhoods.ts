@@ -7,7 +7,7 @@ const sfNeighbourhoods: FeatureCollection = {
     {
       type: "Feature",
       properties: {
-        geoid: "06075061500",
+        geoid: "06075020800",
         name: "Mission District",
         score: 82,
       },
@@ -27,7 +27,7 @@ const sfNeighbourhoods: FeatureCollection = {
     {
       type: "Feature",
       properties: {
-        geoid: "06075010100",
+        geoid: "06075010102",
         name: "Castro",
         score: 88,
       },
@@ -47,7 +47,7 @@ const sfNeighbourhoods: FeatureCollection = {
     {
       type: "Feature",
       properties: {
-        geoid: "06075012800",
+        geoid: "06075022802",
         name: "Noe Valley",
         score: 91,
       },
@@ -87,7 +87,7 @@ const sfNeighbourhoods: FeatureCollection = {
     {
       type: "Feature",
       properties: {
-        geoid: "06075030200",
+        geoid: "06075002601",
         name: "SOMA",
         score: 75,
       },
@@ -127,7 +127,7 @@ const sfNeighbourhoods: FeatureCollection = {
     {
       type: "Feature",
       properties: {
-        geoid: "06075050200",
+        geoid: "06075011901",
         name: "Pacific Heights",
         score: 93,
       },
@@ -147,7 +147,7 @@ const sfNeighbourhoods: FeatureCollection = {
     {
       type: "Feature",
       properties: {
-        geoid: "06075060300",
+        geoid: "06075015301",
         name: "Richmond",
         score: 84,
       },
