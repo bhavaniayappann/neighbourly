@@ -3,7 +3,9 @@ export type ActiveLayer = "overview" | "income" | "schools" | "walk" | "rent";
 export interface NeighbourhoodProperties {
   geoid: string;
   name: string;
-  score: number;
+  city?: string;
+  county?: string;
+  score?: number;
   fillColor?: string;
 }
 
@@ -72,6 +74,7 @@ export interface SocialPulseData {
   negative: number;
   trend: number[];
   keywords: { label: string; count: number; sentiment: "positive" | "negative" }[];
+  subreddits?: { name: string; count: number }[];
   mentions: {
     text: string;
     sentiment: "positive" | "neutral" | "negative";

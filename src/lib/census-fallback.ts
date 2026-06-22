@@ -1,53 +1,34 @@
-import { MOCK_NEIGHBOURHOODS } from "./mock-data";
 import type { CensusTractData } from "@/types";
+import { NEIGHBOURHOOD_NAMES } from "./census";
+import { getTractByGeoid } from "./tracts";
 
-const EXTRA_FALLBACK: Record<string, CensusTractData> = {
-  "06075011901": {
-    geoid: "06075011901",
-    name: "Pacific Heights",
-    population: 21400,
-    medianIncome: 245000,
-    medianRent: 4500,
-    bachelorsPlus: 78,
-  },
-  "06075015301": {
-    geoid: "06075015301",
-    name: "Richmond",
-    population: 67200,
-    medianIncome: 118300,
-    medianRent: 2800,
-    bachelorsPlus: 54,
-  },
+const COUNTY_MEDIANS: Record<string, { income: number; rent: number }> = {
+  Alameda: { income: 104000, rent: 2100 },
+  "Contra Costa": { income: 108000, rent: 2200 },
+  Marin: { income: 126000, rent: 2600 },
+  "San Francisco": { income: 126000, rent: 2400 },
+  "San Mateo": { income: 138000, rent: 2800 },
+  "Santa Clara": { income: 142000, rent: 2700 },
 };
 
-function mockToCensus(geoid: string): CensusTractData | null {
-  const mock = MOCK_NEIGHBOURHOODS[geoid];
-  if (!mock) return EXTRA_FALLBACK[geoid] ?? null;
-
-  return {
-    geoid: mock.geoid,
-    name: mock.name,
-    population: mock.demographics.population,
-    medianIncome: mock.demographics.medianIncome,
-    medianRent: mock.housing.medianRent,
-    bachelorsPlus: mock.demographics.bachelorsPlus,
-  };
-}
+const DEFAULT_MEDIAN = { income: 115000, rent: 2300 };
 
 export function isCensusConfigured(): boolean {
   return Boolean(process.env.CENSUS_API_KEY?.trim());
 }
 
 export function getFallbackTractCensus(geoid: string): CensusTractData {
-  const data = mockToCensus(geoid);
-  if (data) return data;
+  const tract = getTractByGeoid(geoid);
+  const name =
+    NEIGHBOURHOOD_NAMES[geoid] ?? tract?.name ?? "Unknown tract";
+  const medians = COUNTY_MEDIANS[tract?.county ?? ""] ?? DEFAULT_MEDIAN;
 
   return {
     geoid,
-    name: "Unknown",
+    name,
     population: 0,
-    medianIncome: 0,
-    medianRent: 0,
+    medianIncome: medians.income,
+    medianRent: medians.rent,
     bachelorsPlus: 0,
   };
 }

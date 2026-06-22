@@ -1,0 +1,325 @@
+{
+  "neighbourhoods": [
+    {
+      "id": "niles-fremont",
+      "displayName": "Niles",
+      "city": "Fremont",
+      "county": "Alameda",
+      "centroidLat": 37.5766,
+      "centroidLng": -121.978,
+      "bbox": [
+        -122,
+        37.56,
+        -121.96,
+        37.59
+      ]
+    },
+    {
+      "id": "mission-san-jose-fremont",
+      "displayName": "Mission San Jose",
+      "city": "Fremont",
+      "county": "Alameda",
+      "centroidLat": 37.5124,
+      "centroidLng": -121.9211,
+      "bbox": [
+        -121.94,
+        37.5,
+        -121.9,
+        37.53
+      ]
+    },
+    {
+      "id": "ardenwood-fremont",
+      "displayName": "Ardenwood",
+      "city": "Fremont",
+      "county": "Alameda",
+      "centroidLat": 37.5549,
+      "centroidLng": -122.0197,
+      "bbox": [
+        -122.04,
+        37.54,
+        -122,
+        37.57
+      ]
+    },
+    {
+      "id": "irvington-fremont",
+      "displayName": "Irvington",
+      "city": "Fremont",
+      "county": "Alameda",
+      "centroidLat": 37.5271,
+      "centroidLng": -121.9736,
+      "bbox": [
+        -121.99,
+        37.51,
+        -121.95,
+        37.54
+      ]
+    },
+    {
+      "id": "centerville-fremont",
+      "displayName": "Centerville",
+      "city": "Fremont",
+      "county": "Alameda",
+      "centroidLat": 37.5485,
+      "centroidLng": -121.9886,
+      "bbox": [
+        -122.01,
+        37.53,
+        -121.97,
+        37.57
+      ]
+    },
+    {
+      "id": "warm-springs-fremont",
+      "displayName": "Warm Springs",
+      "city": "Fremont",
+      "county": "Alameda",
+      "centroidLat": 37.4974,
+      "centroidLng": -121.9419,
+      "bbox": [
+        -121.96,
+        37.48,
+        -121.92,
+        37.52
+      ]
+    }
+  ],
+  "tracts": [
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001442700",
+      "weight": 0.06902542000175917
+    },
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001442800",
+      "weight": 0.06849766910018472
+    },
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001441800",
+      "weight": 0.13653355616149176
+    },
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001441923",
+      "weight": 0.12703403993315154
+    },
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001441929",
+      "weight": 0.067376198434339
+    },
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001442502",
+      "weight": 0.08501187439528543
+    },
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001442501",
+      "weight": 0.0721259565485091
+    },
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001441927",
+      "weight": 0.09299410678159908
+    },
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001441926",
+      "weight": 0.09257630398451931
+    },
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001442601",
+      "weight": 0.08628727240742369
+    },
+    {
+      "neighbourhoodId": "centerville-fremont",
+      "tractGeoid": "06001442602",
+      "weight": 0.10253760225173718
+    },
+    {
+      "neighbourhoodId": "irvington-fremont",
+      "tractGeoid": "06001442900",
+      "weight": 0.17555339937270123
+    },
+    {
+      "neighbourhoodId": "irvington-fremont",
+      "tractGeoid": "06001443001",
+      "weight": 0.06232371324773789
+    },
+    {
+      "neighbourhoodId": "irvington-fremont",
+      "tractGeoid": "06001443002",
+      "weight": 0.14890448360674233
+    },
+    {
+      "neighbourhoodId": "irvington-fremont",
+      "tractGeoid": "06001441921",
+      "weight": 0.08685154681047905
+    },
+    {
+      "neighbourhoodId": "irvington-fremont",
+      "tractGeoid": "06001442100",
+      "weight": 0.12020217975043437
+    },
+    {
+      "neighbourhoodId": "irvington-fremont",
+      "tractGeoid": "06001442400",
+      "weight": 0.14479770742604417
+    },
+    {
+      "neighbourhoodId": "irvington-fremont",
+      "tractGeoid": "06001442302",
+      "weight": 0.13958526073515806
+    },
+    {
+      "neighbourhoodId": "irvington-fremont",
+      "tractGeoid": "06001442301",
+      "weight": 0.12178170905070289
+    },
+    {
+      "neighbourhoodId": "warm-springs-fremont",
+      "tractGeoid": "06001443102",
+      "weight": 0.2751842751842752
+    },
+    {
+      "neighbourhoodId": "warm-springs-fremont",
+      "tractGeoid": "06001443301",
+      "weight": 0.2513570653105537
+    },
+    {
+      "neighbourhoodId": "warm-springs-fremont",
+      "tractGeoid": "06001441525",
+      "weight": 0.09159476601337066
+    },
+    {
+      "neighbourhoodId": "warm-springs-fremont",
+      "tractGeoid": "06001443321",
+      "weight": 0.19267470430261127
+    },
+    {
+      "neighbourhoodId": "warm-springs-fremont",
+      "tractGeoid": "06001443322",
+      "weight": 0.1891891891891892
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441402",
+      "weight": 0.08967797150576429
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441521",
+      "weight": 0.10095484217415382
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441522",
+      "weight": 0.0885200785353493
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441601",
+      "weight": 0.08011276870668389
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441602",
+      "weight": 0.12600896108472756
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441701",
+      "weight": 0.06517762749408468
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441702",
+      "weight": 0.08452618684029467
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001444303",
+      "weight": 0
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441401",
+      "weight": 0.12668020338641742
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441302",
+      "weight": 0.09780000335621152
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441524",
+      "weight": 0.0689869275561746
+    },
+    {
+      "neighbourhoodId": "ardenwood-fremont",
+      "tractGeoid": "06001441523",
+      "weight": 0.07155442936013827
+    },
+    {
+      "neighbourhoodId": "niles-fremont",
+      "tractGeoid": "06001441928",
+      "weight": 0.1278138898392063
+    },
+    {
+      "neighbourhoodId": "niles-fremont",
+      "tractGeoid": "06001441200",
+      "weight": 0.2515908313376668
+    },
+    {
+      "neighbourhoodId": "niles-fremont",
+      "tractGeoid": "06001441301",
+      "weight": 0.11392405063291139
+    },
+    {
+      "neighbourhoodId": "niles-fremont",
+      "tractGeoid": "06001442000",
+      "weight": 0.10191583989052344
+    },
+    {
+      "neighbourhoodId": "niles-fremont",
+      "tractGeoid": "06001441100",
+      "weight": 0.15846732808758124
+    },
+    {
+      "neighbourhoodId": "niles-fremont",
+      "tractGeoid": "06001441924",
+      "weight": 0.24628806021211083
+    },
+    {
+      "neighbourhoodId": "mission-san-jose-fremont",
+      "tractGeoid": "06001443105",
+      "weight": 0.18476884103863206
+    },
+    {
+      "neighbourhoodId": "mission-san-jose-fremont",
+      "tractGeoid": "06001442200",
+      "weight": 0.28867162761241294
+    },
+    {
+      "neighbourhoodId": "mission-san-jose-fremont",
+      "tractGeoid": "06001443200",
+      "weight": 0.1429306523115896
+    },
+    {
+      "neighbourhoodId": "mission-san-jose-fremont",
+      "tractGeoid": "06001443103",
+      "weight": 0.16327580747308423
+    },
+    {
+      "neighbourhoodId": "mission-san-jose-fremont",
+      "tractGeoid": "06001443104",
+      "weight": 0.2203530715642812
+    }
+  ]
+}

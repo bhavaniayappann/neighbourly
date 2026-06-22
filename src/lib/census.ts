@@ -5,8 +5,13 @@ import {
   isCensusConfigured,
 } from "./census-fallback";
 
-const ACS_YEAR = "2022";
-const ACS_BASE = `https://api.census.gov/data/${ACS_YEAR}/acs/acs5`;
+export const DEFAULT_ACS_YEAR = "2022";
+export const SUPPORTED_ACS_YEARS = ["2022", "2021", "2020"] as const;
+export type AcsYear = (typeof SUPPORTED_ACS_YEARS)[number];
+
+function acsBaseUrl(year: AcsYear): string {
+  return `https://api.census.gov/data/${year}/acs/acs5`;
+}
 
 const CENSUS_VARS = [
   "NAME",
@@ -87,7 +92,10 @@ export function rowToTractData(
   };
 }
 
-function censusApiUrl(params: Record<string, string>): string {
+function censusApiUrl(
+  params: Record<string, string>,
+  year: AcsYear = DEFAULT_ACS_YEAR
+): string {
   const search = new URLSearchParams({
     get: CENSUS_VARS.join(","),
     ...params,
@@ -96,7 +104,7 @@ function censusApiUrl(params: Record<string, string>): string {
   const key = process.env.CENSUS_API_KEY?.trim();
   if (key) search.set("key", key);
 
-  return `${ACS_BASE}?${search.toString()}`;
+  return `${acsBaseUrl(year)}?${search.toString()}`;
 }
 
 async function parseCensusResponse(res: Response): Promise<string[][]> {
@@ -122,13 +130,19 @@ async function parseCensusResponse(res: Response): Promise<string[][]> {
   }
 }
 
-async function fetchTractFromApi(geoid: string): Promise<CensusTractData | null> {
+async function fetchTractFromApi(
+  geoid: string,
+  year: AcsYear = DEFAULT_ACS_YEAR
+): Promise<CensusTractData | null> {
   const { state, county, tract } = parseGeoid(geoid);
 
-  const url = censusApiUrl({
-    for: `tract:${tract}`,
-    in: `state:${state} county:${county}`,
-  });
+  const url = censusApiUrl(
+    {
+      for: `tract:${tract}`,
+      in: `state:${state} county:${county}`,
+    },
+    year
+  );
 
   const res = await fetch(url, { next: { revalidate: 86400 } });
   if (!res.ok) {
@@ -148,29 +162,55 @@ async function fetchTractFromApi(geoid: string): Promise<CensusTractData | null>
   return rowToTractData(row, geoid);
 }
 
-export async function fetchTractCensus(geoid: string): Promise<CensusTractData> {
+export async function fetchTractCensus(
+  geoid: string,
+  year: AcsYear = DEFAULT_ACS_YEAR
+): Promise<CensusTractData> {
   if (!isCensusConfigured()) {
     return getFallbackTractCensus(geoid);
   }
 
   try {
-    const data = await fetchTractFromApi(geoid);
+    const data = await fetchTractFromApi(geoid, year);
     if (data) return data;
   } catch (err) {
-    console.warn(`Census fetch failed for ${geoid}:`, err);
+    console.warn(`Census fetch failed for ${geoid} (${year}):`, err);
   }
 
   return getFallbackTractCensus(geoid);
 }
 
+export async function fetchCountyCensus(
+  countyFips: string,
+  year: AcsYear = DEFAULT_ACS_YEAR
+): Promise<CensusTractData[]> {
+  const state = countyFips.slice(0, 2);
+  const county = countyFips.slice(2, 5);
+
+  if (!isCensusConfigured()) {
+    return [];
+  }
+
+  try {
+    return await fetchCountyTractsFromApi(state, county, year);
+  } catch (err) {
+    console.warn(`County census fetch failed for ${countyFips}:`, err);
+    return [];
+  }
+}
+
 async function fetchCountyTractsFromApi(
   state: string,
-  county: string
+  county: string,
+  year: AcsYear = DEFAULT_ACS_YEAR
 ): Promise<CensusTractData[]> {
-  const url = censusApiUrl({
-    for: "tract:*",
-    in: `state:${state} county:${county}`,
-  });
+  const url = censusApiUrl(
+    {
+      for: "tract:*",
+      in: `state:${state} county:${county}`,
+    },
+    year
+  );
 
   const res = await fetch(url, { next: { revalidate: 86400 } });
   if (!res.ok) {
@@ -191,7 +231,8 @@ async function fetchCountyTractsFromApi(
 }
 
 export async function fetchTractsByGeoids(
-  geoids: string[]
+  geoids: string[],
+  year: AcsYear = DEFAULT_ACS_YEAR
 ): Promise<CensusTractData[]> {
   if (geoids.length === 0) return [];
 
@@ -215,7 +256,7 @@ export async function fetchTractsByGeoids(
     try {
       const state = countyFips.slice(0, 2);
       const county = countyFips.slice(2, 5);
-      const tracts = await fetchCountyTractsFromApi(state, county);
+      const tracts = await fetchCountyTractsFromApi(state, county, year);
       for (const tract of tracts) {
         if (geoidSet.has(tract.geoid)) {
           fromApi.set(tract.geoid, tract);

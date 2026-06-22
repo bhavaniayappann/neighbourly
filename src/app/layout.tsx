@@ -5,9 +5,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Neighbourly — Explore San Francisco Neighbourhoods",
+  title: "Neighbourly — Explore Bay Area Neighbourhoods",
   description:
-    "Discover demographics, housing, schools, and social sentiment for San Francisco neighbourhoods.",
+    "Discover demographics, housing, schools, and social sentiment for Bay Area neighbourhoods across 6 counties.",
 };
 
 export default function RootLayout({

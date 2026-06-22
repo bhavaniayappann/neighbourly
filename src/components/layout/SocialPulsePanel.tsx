@@ -1,25 +1,35 @@
 "use client";
 
 import { useAppStore } from "@/store/useAppStore";
-import { getSocialData } from "@/lib/mock-data";
+import { useSocialData } from "@/hooks/useSocialData";
 import { SentimentBar } from "@/components/social/SentimentBar";
 import { SentimentTrend } from "@/components/social/SentimentTrend";
 import { KeywordTags } from "@/components/social/KeywordTags";
 import { RecentMentions } from "@/components/social/RecentMentions";
+import { SubredditList } from "@/components/social/SubredditList";
 
 export function SocialPulsePanel() {
   const selectedGeoid = useAppStore((s) => s.selectedGeoid);
   const selectedName = useAppStore((s) => s.selectedName);
-  const social = getSocialData(selectedGeoid);
+  const { data: social, loading, error } = useSocialData(selectedGeoid);
 
   return (
-    <aside className="flex w-[280px] shrink-0 flex-col border-l border-gray-200 bg-white">
+    <aside className="hidden w-[280px] shrink-0 flex-col border-l border-gray-200 bg-white lg:flex">
       <div className="border-b border-gray-100 px-4 py-3">
         <h2 className="text-sm font-semibold text-gray-900">Social Pulse</h2>
-        <p className="text-xs text-gray-500">{selectedName}</p>
+        <p className="text-xs text-gray-500">
+          {selectedName} · Last 30 days
+        </p>
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto p-4">
+        {loading && (
+          <p className="text-xs text-gray-400">Loading social data…</p>
+        )}
+        {error && (
+          <p className="text-xs text-amber-600">Using cached estimates.</p>
+        )}
+
         <section>
           <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
             Sentiment
@@ -44,6 +54,15 @@ export function SocialPulsePanel() {
           </h3>
           <KeywordTags keywords={social.keywords} />
         </section>
+
+        {social.subreddits && social.subreddits.length > 0 && (
+          <section>
+            <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+              Top Subreddits
+            </h3>
+            <SubredditList subreddits={social.subreddits} />
+          </section>
+        )}
 
         <section>
           <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
