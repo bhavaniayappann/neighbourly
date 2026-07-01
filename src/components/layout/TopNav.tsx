@@ -60,23 +60,13 @@ export function TopNav() {
         <span className="truncate text-sm text-gray-600">{locationLabel}</span>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        <button
-          type="button"
-          onClick={handleShare}
-          className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-        >
-          {copied ? "Copied!" : "Share"}
-        </button>
-        <button
-          type="button"
-          disabled
-          title="Coming in V2"
-          className="hidden cursor-not-allowed rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-400 sm:inline-block"
-        >
-          Compare
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={handleShare}
+        className="shrink-0 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+      >
+        {copied ? "Copied!" : "Share"}
+      </button>
     </header>
   );
 }

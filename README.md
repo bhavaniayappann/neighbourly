@@ -46,7 +46,7 @@ See [`.env.example`](.env.example). Minimum for local dev:
 | `CENSUS_API_KEY` | Live Census ACS data (falls back to county medians without it) |
 | `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` | Response caching + neighbourhood layer |
 | `ANTHROPIC_API_KEY` | AI chatbot + sentiment analysis |
-| `REDDIT_CLIENT_ID` + `REDDIT_CLIENT_SECRET` | Live Reddit Social Pulse |
+| `REDDIT_CLIENT_ID` + `REDDIT_CLIENT_SECRET` | Optional — OAuth Reddit search; without these, Social Pulse uses public Reddit RSS |
 
 Run [`supabase/schema.sql`](supabase/schema.sql) in your Supabase project before enabling cache.
 

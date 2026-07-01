@@ -1,3 +1,6 @@
+import { searchNeighbourhoodPostsViaRss } from "./reddit-rss";
+import { fetchCommunityPosts } from "./community-feed";
+
 export interface RedditPost {
   id: string;
   title: string;
@@ -58,7 +61,30 @@ async function getAccessToken(): Promise<string | null> {
   return accessToken;
 }
 
+/** OAuth when configured; otherwise community RSS (Google News + Reddit). */
 export async function searchNeighbourhoodPosts(
+  query: string,
+  limit = 25,
+  context?: { city: string; county: string; searchLabel: string }
+): Promise<RedditSearchResult> {
+  if (isRedditConfigured()) {
+    const oauth = await searchNeighbourhoodPostsOAuth(query, limit);
+    if (oauth.posts.length > 0) return oauth;
+  }
+
+  if (context) {
+    return fetchCommunityPosts(
+      context.searchLabel,
+      context.city,
+      context.county,
+      limit
+    );
+  }
+
+  return searchNeighbourhoodPostsViaRss(query, limit);
+}
+
+async function searchNeighbourhoodPostsOAuth(
   query: string,
   limit = 25
 ): Promise<RedditSearchResult> {

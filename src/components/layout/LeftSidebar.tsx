@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import { useCensusData } from "@/hooks/useCensusData";
 import { useNeighbourhoodCensus } from "@/hooks/useNeighbourhoodCensus";
+import { useSchoolsData } from "@/hooks/useSchoolsData";
 import { getNeighbourhoodData } from "@/lib/mock-data";
 import { SearchBar } from "@/components/sidebar/SearchBar";
 import { DataControls } from "@/components/sidebar/DataControls";
@@ -32,6 +33,11 @@ export function LeftSidebar({ className = "" }: { className?: string }) {
   const selectedGeoid = useAppStore((s) => s.selectedGeoid);
   const acsYear = useAppStore((s) => s.acsYear);
   const mockData = getNeighbourhoodData(selectedGeoid);
+
+  const { data: schools, loading: schoolsLoading } = useSchoolsData(
+    selectedGeoid,
+    selectedNeighbourhoodId
+  );
 
   const {
     data: neighbourhoodCensus,
@@ -89,7 +95,11 @@ export function LeftSidebar({ className = "" }: { className?: string }) {
           )}
         </AccordionSection>
         <AccordionSection title="Schools">
-          <SchoolsSection data={mockData.schools} />
+          {schoolsLoading ? (
+            <LoadingStats />
+          ) : (
+            <SchoolsSection data={schools} />
+          )}
         </AccordionSection>
         <AccordionSection title="Housing">
           {loading ? (

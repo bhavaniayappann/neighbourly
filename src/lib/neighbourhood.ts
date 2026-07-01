@@ -60,6 +60,7 @@ export interface NeighbourhoodCensusData {
   population: number;
   medianIncome: number;
   medianRent: number;
+  medianHomeValue: number;
   bachelorsPlus: number;
 }
 
@@ -344,13 +345,14 @@ function aggregateTractCensus(
   tractData: CensusTractData[]
 ): Pick<
   NeighbourhoodCensusData,
-  "population" | "medianIncome" | "medianRent" | "bachelorsPlus"
+  "population" | "medianIncome" | "medianRent" | "medianHomeValue" | "bachelorsPlus"
 > {
   if (tractData.length === 0) {
     return {
       population: 0,
       medianIncome: 0,
       medianRent: 0,
+      medianHomeValue: 0,
       bachelorsPlus: 0,
     };
   }
@@ -367,6 +369,9 @@ function aggregateTractCensus(
       medianRent: Math.round(
         tractData.reduce((s, t) => s + t.medianRent, 0) / n
       ),
+      medianHomeValue: Math.round(
+        tractData.reduce((s, t) => s + t.medianHomeValue, 0) / n
+      ),
       bachelorsPlus: Math.round(
         tractData.reduce((s, t) => s + t.bachelorsPlus, 0) / n
       ),
@@ -381,6 +386,10 @@ function aggregateTractCensus(
     ),
     medianRent: Math.round(
       tractData.reduce((s, t) => s + t.medianRent * t.population, 0) / totalPop
+    ),
+    medianHomeValue: Math.round(
+      tractData.reduce((s, t) => s + t.medianHomeValue * t.population, 0) /
+        totalPop
     ),
     bachelorsPlus: Math.round(
       tractData.reduce((s, t) => s + t.bachelorsPlus * t.population, 0) /

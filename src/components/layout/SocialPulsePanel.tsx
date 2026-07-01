@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/store/useAppStore";
-import { useSocialData } from "@/hooks/useSocialData";
+import { useSocialData, socialSourceLabel } from "@/hooks/useSocialData";
 import { SentimentBar } from "@/components/social/SentimentBar";
 import { SentimentTrend } from "@/components/social/SentimentTrend";
 import { KeywordTags } from "@/components/social/KeywordTags";
@@ -12,6 +12,7 @@ export function SocialPulsePanel() {
   const selectedGeoid = useAppStore((s) => s.selectedGeoid);
   const selectedName = useAppStore((s) => s.selectedName);
   const { data: social, loading, error } = useSocialData(selectedGeoid);
+  const sourceLabel = socialSourceLabel(social);
 
   return (
     <aside className="hidden w-[280px] shrink-0 flex-col border-l border-gray-200 bg-white lg:flex">
@@ -20,16 +21,29 @@ export function SocialPulsePanel() {
         <p className="text-xs text-gray-500">
           {selectedName} · Last 30 days
         </p>
+        {sourceLabel && !loading && (
+          <p
+            className={`mt-1 text-[10px] ${
+              social?.dataSource === "mock"
+                ? "text-amber-600"
+                : "text-teal-600"
+            }`}
+          >
+            {sourceLabel}
+          </p>
+        )}
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto p-4">
         {loading && (
-          <p className="text-xs text-gray-400">Loading social data…</p>
+          <p className="text-xs text-gray-400">Loading community feeds…</p>
         )}
         {error && (
-          <p className="text-xs text-amber-600">Using cached estimates.</p>
+          <p className="text-xs text-amber-600">{error}</p>
         )}
 
+        {!loading && social && (
+          <>
         <section>
           <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
             Sentiment
@@ -70,6 +84,8 @@ export function SocialPulsePanel() {
           </h3>
           <RecentMentions mentions={social.mentions} />
         </section>
+          </>
+        )}
       </div>
     </aside>
   );

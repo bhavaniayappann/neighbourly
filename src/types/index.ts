@@ -15,6 +15,7 @@ export interface CensusTractData {
   population: number;
   medianIncome: number;
   medianRent: number;
+  medianHomeValue: number;
   bachelorsPlus: number;
 }
 
@@ -81,4 +82,68 @@ export interface SocialPulseData {
     timestamp: string;
     source: string;
   }[];
+  /** live = real feeds; mock = placeholder; estimates = AI/heuristic from real snippets */
+  dataSource?: "live" | "mock" | "estimates";
+}
+
+export type MatchPriority = "schools" | "parks" | "dogFriendly";
+
+export type HousingGoal = "buy" | "rent" | "both";
+
+export interface MatchPreferences {
+  housingGoal: HousingGoal;
+  budgetHome: number | null;
+  budgetRent: number | null;
+  kids: number | null;
+  commuteDestination: string;
+  priorities: MatchPriority[];
+}
+
+export interface MatchScoreBreakdown {
+  home: number | null;
+  rent: number | null;
+  schools: number;
+  parks: number;
+  dogFriendly: number;
+  commute: number;
+}
+
+export interface MatchCandidateMetrics {
+  medianHomeValue: number;
+  medianRent: number;
+  schoolRating: number;
+  highSchoolCount: number;
+  parkCount: number;
+  dogParkCount: number;
+  commuteMinutes: number;
+  topSchool: string;
+}
+
+export interface MatchResult {
+  id: string;
+  displayName: string;
+  city: string;
+  county: string;
+  source: "curated" | "city";
+  neighbourhoodId: string | null;
+  geoid: string;
+  bbox: [number, number, number, number];
+  centroid: [number, number];
+  score: number;
+  breakdown: MatchScoreBreakdown;
+  metrics: MatchCandidateMetrics;
+  reasoning: string;
+}
+
+export interface MatchCandidate {
+  id: string;
+  displayName: string;
+  city: string;
+  county: string;
+  source: "curated" | "city";
+  neighbourhoodId: string | null;
+  centroid: [number, number];
+  bbox: [number, number, number, number];
+  primaryGeoid: string;
+  tractGeoids: string[];
 }

@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import type { SocialPulseData } from "@/types";
 import type { RedditPost } from "./reddit";
+import { getMatchCandidates } from "./match-catalog";
+import { templateReasoning } from "./match-reasoning";
 import { getSocialData } from "./mock-data";
 
 const ANTHROPIC_MODEL = "claude-sonnet-4-20250514";
@@ -103,22 +105,76 @@ interface SentimentAnalysis {
   trend: number[];
 }
 
+export function buildPulseFromPosts(posts: RedditPost[]): SocialPulseData {
+  const mentions = posts.slice(0, 5).map((p) => ({
+    text: (p.selftext?.trim() || p.title).slice(0, 200),
+    sentiment: "neutral" as const,
+    timestamp: formatPostTime(p.createdUtc),
+    source: p.subreddit.startsWith("r/") ? p.subreddit : p.subreddit,
+  }));
+
+  const wordCounts = new Map<string, number>();
+  const stop = new Set([
+    "the",
+    "a",
+    "an",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "and",
+    "or",
+    "is",
+    "are",
+    "with",
+    "from",
+    "california",
+    "bay",
+    "area",
+  ]);
+
+  for (const post of posts) {
+    for (const raw of `${post.title} ${post.selftext}`.toLowerCase().split(/\W+/)) {
+      const word = raw.trim();
+      if (word.length < 4 || stop.has(word)) continue;
+      wordCounts.set(word, (wordCounts.get(word) ?? 0) + 1);
+    }
+  }
+
+  const keywords = Array.from(wordCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([label, count]) => ({
+      label,
+      count,
+      sentiment: "positive" as const,
+    }));
+
+  return {
+    positive: 38,
+    neutral: 47,
+    negative: 15,
+    trend: [44, 45, 44, 46, 45, 46],
+    keywords:
+      keywords.length > 0
+        ? keywords
+        : [{ label: "local", count: 1, sentiment: "positive" as const }],
+    mentions,
+    dataSource: "estimates",
+  };
+}
+
 function fallbackSentiment(
   geoid: string,
   posts: RedditPost[]
 ): SocialPulseData {
-  const mock = getSocialData(geoid);
+  if (posts.length === 0) {
+    return { ...getSocialData(geoid), dataSource: "mock" };
+  }
 
-  if (posts.length === 0) return mock;
-
-  const mentions = posts.slice(0, 3).map((p) => ({
-    text: p.selftext?.slice(0, 160) || p.title,
-    sentiment: "neutral" as const,
-    timestamp: formatPostTime(p.createdUtc),
-    source: `r/${p.subreddit}`,
-  }));
-
-  return { ...mock, mentions };
+  return buildPulseFromPosts(posts);
 }
 
 function formatPostTime(unix: number): string {
@@ -149,7 +205,7 @@ export async function analyzeSocialSentiment(
   try {
     const text = await completeText(
       "You analyze neighbourhood sentiment from Reddit posts. Return only valid JSON.",
-      `Analyze Reddit posts about "${neighbourhoodName}, ${county} County, California".
+      `Analyze community posts and local news about "${neighbourhoodName}, ${county} County, California".
 
 Return ONLY valid JSON with this shape:
 {
@@ -183,7 +239,9 @@ ${snippets}`,
           text: m.text || post.title,
           sentiment: m.sentiment,
           timestamp: formatPostTime(post.createdUtc),
-          source: `r/${post.subreddit}`,
+          source: post.subreddit.startsWith("r/")
+            ? post.subreddit
+            : post.subreddit,
         };
       });
 
@@ -192,7 +250,9 @@ ${snippets}`,
         text: posts[0].title,
         sentiment: "neutral",
         timestamp: formatPostTime(posts[0].createdUtc),
-        source: `r/${posts[0].subreddit}`,
+        source: posts[0].subreddit.startsWith("r/")
+          ? posts[0].subreddit
+          : posts[0].subreddit,
       });
     }
 
@@ -201,8 +261,9 @@ ${snippets}`,
       neutral: parsed.neutral ?? 30,
       negative: parsed.negative ?? 25,
       trend: parsed.trend ?? [40, 42, 44, 43, 45, 47],
-      keywords: parsed.keywords ?? getSocialData(geoid).keywords,
+      keywords: parsed.keywords ?? buildPulseFromPosts(posts).keywords,
       mentions,
+      dataSource: "live",
     };
   } catch (err) {
     console.warn("AI sentiment analysis failed:", err);
@@ -249,4 +310,92 @@ export async function chatAboutNeighbourhood(
     console.warn("AI chat failed:", err);
     return err instanceof Error ? err.message : "Chat request failed.";
   }
+}
+
+export const MATCH_EXPLAIN_GUARDRAILS = `You explain neighbourhood match results for someone relocating within the Bay Area.
+
+Rules you MUST follow:
+- The ranking order is fixed — do NOT reorder or contradict the scores provided.
+- Write 2 neutral sentences per neighbourhood explaining why it matched the user's stated preferences.
+- Use only the objective metrics provided (home values, rent, schools nearby, parks, dog-friendly spots, commute time).
+- Present tradeoffs factually — never say an area is "good" or "bad" for any demographic group.
+- NEVER mention race, ethnicity, diversity, or use demographic data as a reason to choose an area.
+- NEVER mention census tracts, GEOIDs, or tract numbers.
+- Refer to places as "Neighbourhood, City" (e.g. "Niles, Fremont") or city name for city-level results.
+- Do not use superlatives like "best" or "perfect" — use "aligns with" or "offers".`;
+
+interface ScoredMatchInput {
+  candidate: {
+    id: string;
+    displayName: string;
+    city: string;
+    source: "curated" | "city";
+  };
+  metrics: {
+    medianHomeValue: number;
+    medianRent: number;
+    schoolRating: number;
+    highSchoolCount: number;
+    parkCount: number;
+    dogParkCount: number;
+    commuteMinutes: number;
+    topSchool: string;
+  };
+  score: number;
+}
+
+export async function generateMatchReasoning(
+  preferences: import("@/types").MatchPreferences,
+  ranked: ScoredMatchInput[]
+): Promise<Map<string, string>> {
+  const candidates = getMatchCandidates();
+  const result = new Map<string, string>();
+
+  for (const item of ranked) {
+    const candidate = candidates.find((c) => c.id === item.candidate.id);
+    if (candidate) {
+      result.set(
+        item.candidate.id,
+        templateReasoning(
+          candidate,
+          item.metrics,
+          preferences as import("@/types").MatchPreferences
+        )
+      );
+    }
+  }
+
+  if (!isAiConfigured()) return result;
+
+  const payload = ranked.map((r) => ({
+    id: r.candidate.id,
+    name:
+      r.candidate.source === "city"
+        ? r.candidate.displayName
+        : `${r.candidate.displayName}, ${r.candidate.city}`,
+    score: r.score,
+    metrics: r.metrics,
+  }));
+
+  try {
+    const text = await completeText(
+      MATCH_EXPLAIN_GUARDRAILS,
+      `User preferences:\n${JSON.stringify(preferences, null, 2)}\n\nRanked neighbourhoods (fixed order):\n${JSON.stringify(payload, null, 2)}\n\nReturn JSON object mapping each id to exactly 2 sentences of reasoning. Example: {"niles-fremont": "..."}`,
+      800
+    );
+
+    if (text) {
+      const cleaned = text.replace(/```json\n?|\n?```/g, "").trim();
+      const parsed = JSON.parse(cleaned) as Record<string, string>;
+      for (const [id, reasoning] of Object.entries(parsed)) {
+        if (typeof reasoning === "string" && reasoning.trim()) {
+          result.set(id, reasoning.trim());
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("AI match reasoning failed:", err);
+  }
+
+  return result;
 }

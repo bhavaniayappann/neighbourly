@@ -1,11 +1,16 @@
 import { getSupabaseAdmin } from "./supabase";
+import { withTimeout } from "./fetch-timeout";
 
 export type CacheCategory =
   | "demographics"
   | "housing"
   | "social"
   | "summary"
-  | "county_demographics";
+  | "county_demographics"
+  | "schools"
+  | "parks"
+  | "dog-friendly"
+  | "match";
 
 const TTL_DAYS: Record<CacheCategory, number> = {
   demographics: 365,
@@ -13,6 +18,10 @@ const TTL_DAYS: Record<CacheCategory, number> = {
   social: 1,
   summary: 365,
   county_demographics: 365,
+  schools: 90,
+  parks: 90,
+  "dog-friendly": 90,
+  match: 7,
 };
 
 function ttlToExpiresAt(category: CacheCategory): string {
@@ -74,10 +83,10 @@ export async function withCache<T>(
   category: CacheCategory,
   fetcher: () => Promise<T>
 ): Promise<T> {
-  const cached = await getCached<T>(geoid, category);
+  const cached = await withTimeout(getCached<T>(geoid, category), 3_000, null);
   if (cached !== null) return cached;
 
   const fresh = await fetcher();
-  await setCache(geoid, category, fresh);
+  void setCache(geoid, category, fresh);
   return fresh;
 }

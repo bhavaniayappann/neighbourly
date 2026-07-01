@@ -6,11 +6,14 @@ import { LeftSidebar } from "./LeftSidebar";
 import { SocialPulsePanel } from "./SocialPulsePanel";
 import { MobileSocialSheet } from "./MobileSocialSheet";
 import { NeighbourhoodMap } from "@/components/map/NeighbourhoodMap";
+import { MapMatchButton } from "@/components/map/MapMatchButton";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { MatchOverlay } from "@/components/match/MatchOverlay";
 import { useUrlSync } from "@/hooks/useUrlSync";
 
 export function AppShell() {
   const [mobileDataOpen, setMobileDataOpen] = useState(false);
+  const [matchOpen, setMatchOpen] = useState(false);
   useUrlSync();
 
   return (
@@ -20,7 +23,8 @@ export function AppShell() {
         <LeftSidebar className="hidden md:flex" />
         <main className="relative min-w-0 flex-1">
           <NeighbourhoodMap />
-          <ChatWidget />
+          <MapMatchButton onClick={() => setMatchOpen(true)} />
+          {!matchOpen && <ChatWidget />}
           <MobileSocialSheet />
 
           <button
@@ -57,6 +61,8 @@ export function AppShell() {
           </div>
         </div>
       )}
+
+      {matchOpen && <MatchOverlay onClose={() => setMatchOpen(false)} />}
     </div>
   );
 }

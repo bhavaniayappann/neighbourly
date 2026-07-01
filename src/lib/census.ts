@@ -18,6 +18,7 @@ const CENSUS_VARS = [
   "B01003_001E",
   "B19013_001E",
   "B25064_001E",
+  "B25077_001E",
   "B15003_001E",
   "B15003_022E",
   "B15003_023E",
@@ -88,6 +89,7 @@ export function rowToTractData(
     population: parseCensusNumber(row.B01003_001E),
     medianIncome: parseCensusNumber(row.B19013_001E),
     medianRent: parseCensusNumber(row.B25064_001E),
+    medianHomeValue: parseCensusNumber(row.B25077_001E),
     bachelorsPlus: computeBachelorsPlus(row),
   };
 }
