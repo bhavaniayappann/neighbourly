@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:schools": "tsx scripts/build-bay-area-schools.ts",
     "build:tracts": "tsx scripts/build-bay-area-tracts.ts",
     "seed:neighbourhoods": "tsx scripts/seed-fremont-neighbourhoods.ts",
     "start": "next start",
@@ -12,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
+    "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.108.2",
     "@turf/area": "^7.3.5",
     "@turf/bbox": "^7.3.5",

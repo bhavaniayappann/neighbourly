@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import type { CensusTractData } from "@/types";
+import type { CensusTractData, SchoolsData } from "@/types";
 import { getNeighbourhoodData } from "@/lib/mock-data";
 import { formatLayerValue, getLayerValue } from "@/lib/colors";
 import type { ActiveLayer } from "@/types";
@@ -18,8 +18,13 @@ export interface TooltipData {
 interface MapTooltipProps {
   data: TooltipData | null;
   census?: CensusTractData;
+  schools?: SchoolsData;
   activeLayer: ActiveLayer;
+  containerWidth?: number;
 }
+
+const TOOLTIP_WIDTH = 200;
+const TOOLTIP_OFFSET = 12;
 
 interface Bucket {
   label: string;
@@ -117,20 +122,37 @@ function MiniBarChart({
   );
 }
 
-export function MapTooltip({ data, census, activeLayer }: MapTooltipProps) {
+export function MapTooltip({
+  data,
+  census,
+  schools,
+  activeLayer,
+  containerWidth,
+}: MapTooltipProps) {
   if (!data) return null;
 
   const mock = getNeighbourhoodData(data.geoid);
   const medianIncome = census?.medianIncome ?? mock.demographics.medianIncome;
   const medianAge = mock.demographics.medianAge;
-  const layerValue = getLayerValue(activeLayer, census, data.score);
+  const layerValue = getLayerValue(activeLayer, census, data.score, schools);
 
   const incomeBuckets = deriveIncomeBuckets(medianIncome);
   const ageBuckets = deriveAgeBuckets(medianAge);
 
-  const maxX = typeof window !== "undefined" ? window.innerWidth - 220 : 9999;
-  const offsetX = Math.min(data.x + 12, maxX);
-  const offsetY = Math.max(data.y - 10, 80);
+  const maxRight =
+    containerWidth != null
+      ? containerWidth - TOOLTIP_WIDTH - 8
+      : typeof window !== "undefined"
+        ? window.innerWidth - TOOLTIP_WIDTH - 8
+        : 9999;
+
+  let offsetX = data.x + TOOLTIP_OFFSET;
+  if (offsetX > maxRight) {
+    offsetX = data.x - TOOLTIP_WIDTH - TOOLTIP_OFFSET;
+  }
+  offsetX = Math.max(8, offsetX);
+
+  const offsetY = Math.max(data.y - 10, 8);
 
   return (
     <div
@@ -141,24 +163,62 @@ export function MapTooltip({ data, census, activeLayer }: MapTooltipProps) {
         <div>
           <p className="text-sm font-semibold text-gray-900">{data.name}</p>
           <p className="text-[10px] text-gray-500">
-            Score {data.score} ·{" "}
-            {formatLayerValue(activeLayer, layerValue)}
+            {activeLayer === "schools" ? (
+              layerValue > 0 ? (
+                <>School rating {formatLayerValue(activeLayer, layerValue)}</>
+              ) : (
+                "School ranking unavailable"
+              )
+            ) : (
+              <>
+                Score {data.score} · {formatLayerValue(activeLayer, layerValue)}
+              </>
+            )}
           </p>
         </div>
       </div>
 
-      <div className="space-y-2 border-t border-gray-100 pt-2">
-        <MiniBarChart
-          title="Income distribution"
-          buckets={incomeBuckets}
-          color="#0D9488"
-        />
-        <MiniBarChart
-          title="Age profile"
-          buckets={ageBuckets}
-          color="#6366F1"
-        />
-      </div>
+      {activeLayer === "schools" ? (
+        schools ? (
+          <div className="space-y-2 border-t border-gray-100 pt-2">
+            <div className="grid grid-cols-3 gap-1 text-center">
+              {[
+                ["Elementary", schools.elementaryCount],
+                ["Middle", schools.middleCount],
+                ["High", schools.highCount],
+              ].map(([label, count]) => (
+                <div key={label} className="rounded bg-gray-50 px-1 py-1.5">
+                  <p className="text-sm font-semibold text-gray-800">{count}</p>
+                  <p className="text-[8px] text-gray-500">{label}</p>
+                </div>
+              ))}
+            </div>
+            <div>
+              <p className="text-[9px] font-medium uppercase tracking-wide text-gray-400">
+                Top nearby school
+              </p>
+              <p className="text-xs text-gray-700">{schools.topSchool}</p>
+            </div>
+          </div>
+        ) : (
+          <p className="border-t border-gray-100 pt-2 text-xs text-gray-500">
+            No generated ranking for this tract.
+          </p>
+        )
+      ) : (
+        <div className="space-y-2 border-t border-gray-100 pt-2">
+          <MiniBarChart
+            title="Income distribution"
+            buckets={incomeBuckets}
+            color="#0D9488"
+          />
+          <MiniBarChart
+            title="Age profile"
+            buckets={ageBuckets}
+            color="#6366F1"
+          />
+        </div>
+      )}
     </div>
   );
 }

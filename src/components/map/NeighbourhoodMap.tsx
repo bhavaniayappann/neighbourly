@@ -7,6 +7,7 @@ import type { MapLayerMouseEvent } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { useBayAreaCensus } from "@/hooks/useCensusData";
+import { useSchoolRankings } from "@/hooks/useSchoolRankings";
 import { resolveAreaSelection } from "@/lib/neighbourhood-client";
 import { computeAreaScores, getColorScale } from "@/lib/colors";
 import { BAY_AREA_BOUNDS, BAY_AREA_CENTER } from "@/lib/regions";
@@ -35,7 +36,12 @@ export function NeighbourhoodMap() {
   const [tracts, setTracts] = useState<FeatureCollection | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
-  const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>();
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  const clearTooltip = useCallback(() => {
+    setTooltip(null);
+  }, []);
 
   useEffect(() => {
     if (!layerActive) return;
@@ -65,6 +71,11 @@ export function NeighbourhoodMap() {
     acsYear,
     layerActive
   );
+  const {
+    data: schoolsMap,
+    loading: schoolsLoading,
+    error: schoolsError,
+  } = useSchoolRankings(activeLayer === "schools");
 
   const scores = useMemo(
     () => (layerActive ? computeAreaScores(censusMap) : {}),
@@ -75,8 +86,8 @@ export function NeighbourhoodMap() {
     if (!layerActive || !activeLayer) {
       return () => "#E5E7EB";
     }
-    return getColorScale(activeLayer, censusMap, scores);
-  }, [layerActive, activeLayer, censusMap, scores]);
+    return getColorScale(activeLayer, censusMap, scores, schoolsMap);
+  }, [layerActive, activeLayer, censusMap, scores, schoolsMap]);
 
   const colouredGeoJSON = useMemo(() => {
     if (!tracts || !layerActive) return null;
@@ -113,10 +124,9 @@ export function NeighbourhoodMap() {
     (e: MapLayerMouseEvent) => {
       if (!layerActive) return;
       const feature = e.features?.[0];
-      if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
 
       if (!feature?.properties) {
-        hoverTimeout.current = setTimeout(() => setTooltip(null), 80);
+        clearTooltip();
         return;
       }
 
@@ -124,26 +134,58 @@ export function NeighbourhoodMap() {
       const name = feature.properties.name as string;
       const score = scores[geoid] ?? 0;
 
-      hoverTimeout.current = setTimeout(() => {
-        setTooltip({
-          geoid,
-          name,
-          score,
-          x: e.point.x,
-          y: e.point.y,
-        });
-      }, 60);
+      setTooltip({
+        geoid,
+        name,
+        score,
+        x: e.point.x,
+        y: e.point.y,
+      });
     },
-    [layerActive, scores]
+    [layerActive, scores, clearTooltip]
   );
 
   const handleMouseLeave = useCallback(() => {
-    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
-    setTooltip(null);
+    clearTooltip();
+  }, [clearTooltip]);
+
+  useEffect(() => {
+    function onDocumentPointerMove(ev: PointerEvent) {
+      const container = mapContainerRef.current;
+      if (!container) return;
+      const target = ev.target;
+      if (target instanceof Node && !container.contains(target)) {
+        clearTooltip();
+      }
+    }
+
+    document.addEventListener("pointermove", onDocumentPointerMove);
+    return () =>
+      document.removeEventListener("pointermove", onDocumentPointerMove);
+  }, [clearTooltip]);
+
+  useEffect(() => {
+    clearTooltip();
+  }, [activeLayer, clearTooltip]);
+
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container) return;
+
+    const updateWidth = () => setContainerWidth(container.clientWidth);
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(container);
+    return () => observer.disconnect();
   }, []);
 
   return (
-    <div className="relative h-full w-full">
+    <div
+      ref={mapContainerRef}
+      className="relative h-full w-full"
+      onPointerLeave={clearTooltip}
+    >
       <Map
         initialViewState={BAY_AREA_CENTER}
         maxBounds={MAX_BOUNDS}
@@ -218,9 +260,18 @@ export function NeighbourhoodMap() {
         </div>
       )}
 
-      {layerActive && censusLoading && (
+      {layerActive &&
+        (activeLayer === "schools" ? schoolsLoading : censusLoading) && (
         <div className="pointer-events-none absolute right-4 top-16 rounded-lg border border-gray-200 bg-white/95 px-3 py-1.5 text-xs text-gray-500 shadow-sm">
-          Loading census data…
+          {activeLayer === "schools"
+            ? "Loading school rankings…"
+            : "Loading census data…"}
+        </div>
+      )}
+
+      {activeLayer === "schools" && schoolsError && (
+        <div className="pointer-events-none absolute right-4 top-16 rounded-lg border border-red-200 bg-white/95 px-3 py-1.5 text-xs text-red-600 shadow-sm">
+          {schoolsError}
         </div>
       )}
 
@@ -229,13 +280,18 @@ export function NeighbourhoodMap() {
           <MapTooltip
             data={tooltip}
             census={tooltip ? censusMap[tooltip.geoid] : undefined}
+            schools={tooltip ? schoolsMap[tooltip.geoid] : undefined}
             activeLayer={activeLayer}
+            containerWidth={containerWidth}
           />
           <MapLegend
             activeLayer={activeLayer}
             censusMap={censusMap}
+            schoolsMap={schoolsMap}
             scores={scores}
-            loading={censusLoading}
+            loading={
+              activeLayer === "schools" ? schoolsLoading : censusLoading
+            }
           />
         </>
       )}

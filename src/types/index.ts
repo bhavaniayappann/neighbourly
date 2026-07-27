@@ -37,6 +37,8 @@ export interface SchoolsData {
   topSchool: string;
 }
 
+export type TractSchoolsMap = Record<string, SchoolsData>;
+
 export interface HousingData {
   medianRent: number;
   medianHomeValue: number;
@@ -146,4 +148,44 @@ export interface MatchCandidate {
   bbox: [number, number, number, number];
   primaryGeoid: string;
   tractGeoids: string[];
+}
+
+export type HouseVisitStatus = "visited" | "planned";
+
+export type CriterionValueType = "text" | "number" | "rating" | "boolean";
+
+export interface ComparisonCriterion {
+  id: string;
+  label: string;
+  valueType: CriterionValueType;
+  sortOrder: number;
+}
+
+export interface HouseCriterionValue {
+  criterionId: string;
+  valueText?: string;
+  valueNumber?: number;
+  valueRating?: number;
+  valueBoolean?: boolean;
+}
+
+export type CriterionValuesMap = Record<string, HouseCriterionValue>;
+
+export interface SavedHouse {
+  id: string;
+  address: string;
+  lat: number;
+  lng: number;
+  status: HouseVisitStatus;
+  beds?: number;
+  baths?: number;
+  sqft?: number;
+  listPrice?: number;
+  offerPrice?: number;
+  notes?: string;
+  neighbourhood?: string;
+  geoid?: string;
+  neighbourhoodId?: string | null;
+  rating?: number;
+  visitDate?: string;
 }

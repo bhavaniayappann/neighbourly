@@ -1,26 +1,16 @@
 import type { SchoolsData } from "@/types";
 import { withCache } from "./cache";
 import { getNeighbourhoodProfile } from "./neighbourhood";
+import {
+  aggregateSchoolsData,
+  emptySchoolsData,
+  parseSchoolElements,
+  type OsmSchoolElement,
+} from "./school-ranking";
 import { getTractByGeoid } from "./tracts";
 
-type SchoolLevel = "elementary" | "middle" | "high" | "unknown";
-
-interface ParsedSchool {
-  name: string;
-  level: SchoolLevel;
-  isPublic: boolean;
-}
-
-interface OverpassElement {
-  type: string;
-  lat?: number;
-  lon?: number;
-  center?: { lat: number; lon: number };
-  tags?: Record<string, string>;
-}
-
 interface OverpassResponse {
-  elements: OverpassElement[];
+  elements: OsmSchoolElement[];
 }
 
 const OVERPASS_ENDPOINTS = [
@@ -28,74 +18,11 @@ const OVERPASS_ENDPOINTS = [
   "https://overpass.kumi.systems/api/interpreter",
 ];
 
-const LEVEL_RANK: Record<SchoolLevel, number> = {
-  high: 3,
-  middle: 2,
-  elementary: 1,
-  unknown: 0,
-};
-
-function classifyLevel(tags: Record<string, string>): SchoolLevel {
-  const level = `${tags["school:level"] ?? ""} ${tags["isced:level"] ?? ""}`.toLowerCase();
-  const name = (tags.name ?? "").toLowerCase();
-
-  if (
-    level.includes("high") ||
-    level.includes("secondary") ||
-    name.includes("high school")
-  ) {
-    return "high";
-  }
-  if (
-    level.includes("middle") ||
-    level.includes("junior") ||
-    name.includes("middle school") ||
-    name.includes("junior high")
-  ) {
-    return "middle";
-  }
-  if (
-    level.includes("elementary") ||
-    level.includes("primary") ||
-    name.includes("elementary")
-  ) {
-    return "elementary";
-  }
-  return "unknown";
-}
-
-function isPublicSchool(tags: Record<string, string>): boolean {
-  const operator = (tags.operator ?? "").toLowerCase();
-  const operatorType = (tags["operator:type"] ?? "").toLowerCase();
-  const name = (tags.name ?? "").toLowerCase();
-
-  if (operatorType === "private") return false;
-  if (tags.religion && tags.religion !== "none") return false;
-  if (
-    /private|charter|lutheran|catholic|christian|montessori|prep school/.test(
-      name
-    ) &&
-    !/public/.test(name)
-  ) {
-    return false;
-  }
-  if (/school district|unified|public schools/.test(operator)) return true;
-  return true;
-}
-
-function elementCoords(el: OverpassElement): [number, number] | null {
-  if (typeof el.lat === "number" && typeof el.lon === "number") {
-    return [el.lon, el.lat];
-  }
-  if (el.center) return [el.center.lon, el.center.lat];
-  return null;
-}
-
 async function queryOverpass(
   lat: number,
   lng: number,
   radiusMeters: number
-): Promise<OverpassElement[]> {
+): Promise<OsmSchoolElement[]> {
   const query = `
 [out:json][timeout:10];
 (
@@ -125,65 +52,6 @@ out center tags;
   }
 
   return [];
-}
-
-function parseSchoolElements(elements: OverpassElement[]): ParsedSchool[] {
-  const seen = new Set<string>();
-  const schools: ParsedSchool[] = [];
-
-  for (const el of elements) {
-    const name = el.tags?.name?.trim();
-    if (!name || !elementCoords(el)) continue;
-
-    const key = name.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    schools.push({
-      name,
-      level: classifyLevel(el.tags ?? {}),
-      isPublic: isPublicSchool(el.tags ?? {}),
-    });
-  }
-
-  return schools;
-}
-
-export function aggregateSchoolsData(schools: ParsedSchool[]): SchoolsData {
-  const elementaryCount = schools.filter((s) => s.level === "elementary").length;
-  const middleCount = schools.filter((s) => s.level === "middle").length;
-  const highCount = schools.filter((s) => s.level === "high").length;
-
-  const ranked = [...schools].sort((a, b) => {
-    const publicDiff = Number(b.isPublic) - Number(a.isPublic);
-    if (publicDiff !== 0) return publicDiff;
-    return LEVEL_RANK[b.level] - LEVEL_RANK[a.level];
-  });
-
-  const topSchool = ranked[0]?.name ?? "No schools found nearby";
-
-  const levelScore =
-    highCount > 0 ? 8.5 : middleCount > 0 ? 7.8 : elementaryCount > 0 ? 7.2 : 7.0;
-  const breadthBonus = Math.min(1.2, schools.length * 0.08);
-  const avgRating = Math.min(9.5, Math.round((levelScore + breadthBonus) * 10) / 10);
-
-  return {
-    avgRating,
-    elementaryCount,
-    middleCount,
-    highCount,
-    topSchool,
-  };
-}
-
-function emptySchoolsData(city?: string): SchoolsData {
-  return {
-    avgRating: 7.0,
-    elementaryCount: 0,
-    middleCount: 0,
-    highCount: 0,
-    topSchool: city ? `${city} area schools` : "No schools found nearby",
-  };
 }
 
 async function fetchSchoolsNearUncached(

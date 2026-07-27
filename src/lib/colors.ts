@@ -1,6 +1,12 @@
 import * as d3 from "d3";
 import { GENERIC_MOCK } from "@/lib/mock-data";
-import type { ActiveLayer, CensusTractData, TractCensusMap } from "@/types";
+import type {
+  ActiveLayer,
+  CensusTractData,
+  SchoolsData,
+  TractCensusMap,
+  TractSchoolsMap,
+} from "@/types";
 
 const CHOROPLETH_RANGE = ["#FECACA", "#99F6E4", "#2DD4BF", "#2DD4BF", "#0D9488"] as const;
 
@@ -44,7 +50,8 @@ export function getLayerLabel(layer: ActiveLayer): string {
 export function getLayerValue(
   layer: ActiveLayer,
   census: CensusTractData | undefined,
-  score: number
+  score: number,
+  schools?: SchoolsData
 ): number {
   switch (layer) {
     case "income":
@@ -52,7 +59,7 @@ export function getLayerValue(
     case "rent":
       return census?.medianRent ?? 0;
     case "schools":
-      return GENERIC_MOCK.schools.avgRating;
+      return schools?.avgRating ?? 0;
     case "walk":
       return GENERIC_MOCK.walkability.walkScore;
     case "overview":
@@ -65,7 +72,8 @@ export function getLayerValue(
 export function getColorScale(
   layer: ActiveLayer,
   censusMap: TractCensusMap,
-  scores: Record<string, number>
+  scores: Record<string, number>,
+  schoolsMap: TractSchoolsMap = {}
 ): (geoid: string) => string {
   if (layer === "overview") {
     return (geoid) => {
@@ -75,9 +83,16 @@ export function getColorScale(
     };
   }
 
-  const geoids = Object.keys(scores);
+  const geoids = layer === "schools" ? Object.keys(schoolsMap) : Object.keys(scores);
   const values = geoids
-    .map((geoid) => getLayerValue(layer, censusMap[geoid], scores[geoid] ?? 0))
+    .map((geoid) =>
+      getLayerValue(
+        layer,
+        censusMap[geoid],
+        scores[geoid] ?? 0,
+        schoolsMap[geoid]
+      )
+    )
     .filter((v) => v > 0);
 
   if (values.length === 0) {
@@ -90,7 +105,12 @@ export function getColorScale(
     .range([...CHOROPLETH_RANGE]);
 
   return (geoid) => {
-    const value = getLayerValue(layer, censusMap[geoid], scores[geoid] ?? 0);
+    const value = getLayerValue(
+      layer,
+      censusMap[geoid],
+      scores[geoid] ?? 0,
+      schoolsMap[geoid]
+    );
     if (value <= 0) return "#E5E7EB";
     return scale(value);
   };
@@ -114,7 +134,8 @@ export function formatLayerValue(layer: ActiveLayer, value: number): string {
 export function getLegendStops(
   layer: ActiveLayer,
   censusMap: TractCensusMap,
-  scores: Record<string, number>
+  scores: Record<string, number>,
+  schoolsMap: TractSchoolsMap = {}
 ): { label: string; color: string }[] {
   if (layer === "overview") {
     return [
@@ -124,9 +145,16 @@ export function getLegendStops(
     ];
   }
 
-  const geoids = Object.keys(scores);
+  const geoids = layer === "schools" ? Object.keys(schoolsMap) : Object.keys(scores);
   const values = geoids
-    .map((geoid) => getLayerValue(layer, censusMap[geoid], scores[geoid] ?? 0))
+    .map((geoid) =>
+      getLayerValue(
+        layer,
+        censusMap[geoid],
+        scores[geoid] ?? 0,
+        schoolsMap[geoid]
+      )
+    )
     .filter((v) => v > 0)
     .sort(d3.ascending);
 

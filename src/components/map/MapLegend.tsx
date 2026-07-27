@@ -1,11 +1,12 @@
 "use client";
 
-import type { ActiveLayer, TractCensusMap } from "@/types";
+import type { ActiveLayer, TractCensusMap, TractSchoolsMap } from "@/types";
 import { getLayerLabel, getLegendStops } from "@/lib/colors";
 
 interface MapLegendProps {
   activeLayer: ActiveLayer;
   censusMap: TractCensusMap;
+  schoolsMap: TractSchoolsMap;
   scores: Record<string, number>;
   loading?: boolean;
 }
@@ -13,10 +14,16 @@ interface MapLegendProps {
 export function MapLegend({
   activeLayer,
   censusMap,
+  schoolsMap,
   scores,
   loading,
 }: MapLegendProps) {
-  const legendStops = getLegendStops(activeLayer, censusMap, scores);
+  const legendStops = getLegendStops(
+    activeLayer,
+    censusMap,
+    scores,
+    schoolsMap
+  );
 
   const legendGradient =
     legendStops.length >= 2
@@ -27,7 +34,7 @@ export function MapLegend({
     <div className="absolute bottom-4 left-4 rounded-lg border border-gray-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur-sm">
       <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500">
         {getLayerLabel(activeLayer)}
-        {loading && (activeLayer === "income" || activeLayer === "rent") && (
+        {loading && (
           <span className="ml-1 normal-case text-gray-400">(loading…)</span>
         )}
       </p>

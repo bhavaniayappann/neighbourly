@@ -22,6 +22,15 @@ interface CensusGeocoderResponse {
 interface NominatimResult {
   lat: string;
   lon: string;
+  display_name: string;
+  place_id: number;
+}
+
+export interface AddressSuggestion {
+  id: string;
+  label: string;
+  lat: number;
+  lng: number;
 }
 
 function geocodeFromLocalIndex(query: string): GeoPoint | null {
@@ -133,4 +142,50 @@ export async function geocodePlace(query: string): Promise<GeoPoint | null> {
   if (census) return census;
 
   return geocodeFromNominatim(trimmed);
+}
+
+/** Street-address suggestions for Bay Area (Nominatim). */
+export async function searchAddressSuggestions(
+  query: string
+): Promise<AddressSuggestion[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 3) return [];
+
+  const params = new URLSearchParams({
+    q: `${trimmed}, California, USA`,
+    format: "json",
+    limit: "6",
+    addressdetails: "1",
+    viewbox: `${BAY_AREA_BOUNDS.west},${BAY_AREA_BOUNDS.north},${BAY_AREA_BOUNDS.east},${BAY_AREA_BOUNDS.south}`,
+    bounded: "1",
+    countrycodes: "us",
+  });
+
+  try {
+    const res = await fetch(`${NOMINATIM}?${params.toString()}`, {
+      headers: { "User-Agent": "Neighbourly/1.0 (address suggest)" },
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+
+    const results = (await res.json()) as NominatimResult[];
+    const suggestions: AddressSuggestion[] = [];
+
+    for (const hit of results) {
+      const lat = parseFloat(hit.lat);
+      const lng = parseFloat(hit.lon);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) continue;
+
+      suggestions.push({
+        id: String(hit.place_id),
+        label: hit.display_name,
+        lat,
+        lng,
+      });
+    }
+
+    return suggestions;
+  } catch {
+    return [];
+  }
 }
