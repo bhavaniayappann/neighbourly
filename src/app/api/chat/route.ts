@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { fetchTractCensus } from "@/lib/census";
-import { chatAboutNeighbourhood } from "@/lib/ai";
+import { chatAboutNeighbourhood, chatAboutNeighbourhoodRag } from "@/lib/ai";
 import { getNeighbourhoodData, getSocialData } from "@/lib/mock-data";
 import { resolveNeighbourhoodForTract } from "@/lib/neighbourhood";
+import { retrieveSocialChunks } from "@/lib/social-rag";
 import { getTractByGeoid } from "@/lib/tracts";
+import type { ChatSource } from "@/types";
 
 export async function POST(request: Request) {
   try {
@@ -44,8 +46,43 @@ export async function POST(request: Request) {
       },
     };
 
-    const reply = await chatAboutNeighbourhood(displayName, county, context, messages);
-    return NextResponse.json({ reply });
+    const lastUserMessage =
+      [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
+
+    const chunks = await retrieveSocialChunks(
+      geoid,
+      city,
+      county,
+      lastUserMessage
+    );
+
+    if (chunks.length > 0) {
+      const sources: ChatSource[] = chunks.map((chunk, i) => ({
+        index: i + 1,
+        source: chunk.source,
+        excerpt: chunk.content.slice(0, 200),
+        permalink: chunk.permalink,
+        similarity: chunk.similarity,
+      }));
+
+      const reply = await chatAboutNeighbourhoodRag(
+        displayName,
+        county,
+        context,
+        messages,
+        sources
+      );
+
+      return NextResponse.json({ reply, sources, ragUsed: true });
+    }
+
+    const reply = await chatAboutNeighbourhood(
+      displayName,
+      county,
+      context,
+      messages
+    );
+    return NextResponse.json({ reply, sources: [], ragUsed: false });
   } catch (err) {
     console.error("Chat API error:", err);
     return NextResponse.json(

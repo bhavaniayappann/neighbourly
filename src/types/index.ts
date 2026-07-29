@@ -171,6 +171,14 @@ export interface HouseCriterionValue {
 
 export type CriterionValuesMap = Record<string, HouseCriterionValue>;
 
+export interface ChatSource {
+  index: number;
+  source: string;
+  excerpt: string;
+  permalink?: string;
+  similarity?: number;
+}
+
 export interface SavedHouse {
   id: string;
   address: string;

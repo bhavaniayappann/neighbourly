@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/store/useAppStore";
+import type { ChatSource } from "@/types";
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  sources?: ChatSource[];
+  ragUsed?: boolean;
 }
 
 export function ChatPanel({ onClose }: { onClose: () => void }) {
@@ -69,12 +72,19 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ geoid: selectedGeoid, messages: nextMessages }),
       });
-      const json = (await res.json()) as { reply?: string; error?: string };
+      const json = (await res.json()) as {
+        reply?: string;
+        error?: string;
+        sources?: ChatSource[];
+        ragUsed?: boolean;
+      };
       setMessages([
         ...nextMessages,
         {
           role: "assistant",
           content: json.reply ?? json.error ?? "Something went wrong.",
+          sources: json.sources,
+          ragUsed: json.ragUsed,
         },
       ]);
     } catch {
@@ -110,7 +120,7 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
           >
             <div
               className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
@@ -121,6 +131,23 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
             >
               {msg.content}
             </div>
+            {msg.role === "assistant" && msg.ragUsed && (
+              <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-teal-600">
+                Grounded in community posts
+              </p>
+            )}
+            {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
+              <div className="mt-2 max-w-[95%]">
+                <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-gray-400">
+                  Sources
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {msg.sources.map((source) => (
+                    <SourceChip key={source.index} source={source} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ))}
         {loading && (
@@ -151,5 +178,33 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
         </div>
       </form>
     </div>
+  );
+}
+
+function SourceChip({ source }: { source: ChatSource }) {
+  const label = `${source.source}: ${source.excerpt.slice(0, 60)}${source.excerpt.length > 60 ? "…" : ""}`;
+  const className =
+    "inline-flex max-w-full items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px] text-gray-600 hover:border-teal-300 hover:text-teal-700";
+
+  if (source.permalink) {
+    return (
+      <a
+        href={source.permalink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        title={source.excerpt}
+      >
+        <span className="font-medium text-teal-600">[{source.index}]</span>
+        <span className="truncate">{label}</span>
+      </a>
+    );
+  }
+
+  return (
+    <span className={className} title={source.excerpt}>
+      <span className="font-medium text-teal-600">[{source.index}]</span>
+      <span className="truncate">{label}</span>
+    </span>
   );
 }

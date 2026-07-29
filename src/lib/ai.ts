@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
-import type { SocialPulseData } from "@/types";
+import type { ChatSource, SocialPulseData } from "@/types";
 import type { RedditPost } from "./reddit";
 import { getMatchCandidates } from "./match-catalog";
 import { templateReasoning } from "./match-reasoning";
@@ -308,6 +308,49 @@ export async function chatAboutNeighbourhood(
     return text || "Sorry, I couldn't generate a response.";
   } catch (err) {
     console.warn("AI chat failed:", err);
+    return err instanceof Error ? err.message : "Chat request failed.";
+  }
+}
+
+function formatCommunityPostsSection(sources: ChatSource[]): string {
+  if (sources.length === 0) return "";
+
+  const excerpts = sources
+    .map(
+      (s) =>
+        `[${s.index}] (${s.source}): ${s.excerpt}${s.excerpt.length >= 200 ? "…" : ""}`
+    )
+    .join("\n\n");
+
+  return `
+
+Community posts (retrieved from local Reddit and news feeds):
+${excerpts}
+
+When answering questions about what residents say or community sentiment:
+- Ground your answer in these posts when they are relevant.
+- Cite sources inline using [1], [2], etc. matching the numbers above.
+- If the posts do not cover the topic, say so clearly and rely on the area context data instead.
+- Do not invent quotes or opinions not present in the posts.`;
+}
+
+export async function chatAboutNeighbourhoodRag(
+  neighbourhoodName: string,
+  county: string,
+  context: Record<string, unknown>,
+  messages: { role: "user" | "assistant"; content: string }[],
+  sources: ChatSource[]
+): Promise<string> {
+  if (!isAiConfigured()) return unavailableMessage();
+
+  const communitySection = formatCommunityPostsSection(sources);
+  const system = `${CHAT_GUARDRAILS}${communitySection}\n\nArea context for ${neighbourhoodName}, ${county} County:\n${JSON.stringify(context, null, 2)}`;
+
+  try {
+    const text = await completeChat(system, messages, 1024);
+    return text || "Sorry, I couldn't generate a response.";
+  } catch (err) {
+    console.warn("AI RAG chat failed:", err);
     return err instanceof Error ? err.message : "Chat request failed.";
   }
 }
